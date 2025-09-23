@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>二维地图容器</title>
+    <!-- 引入ArcGIS JavaScript API样式 -->
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.33/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.33/"></script>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- map container -->
+    <div id="mapContainer"></div>
+
+    
+    <div id="cityListContainer">
+      <h2 class="city-list-title">附近城市列表</h2>
+      <div id="city-list">请点击一条高速公路查看附近城市</div>
+    </div>
+
+    <!-- 加载主应用模块 -->
+    <script type="module" src="./index.js"></script>
+  </body>
+</html>
