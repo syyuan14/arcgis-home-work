@@ -2,7 +2,7 @@
 import {
   createCityLayer,
   showCitiesNearHighway,
-  updateCityLayerRendererForCachedCities,
+  updateCityListFromCache,
 } from "./city-layer.js";
 import { createHighwaysLayer } from "./highways-layer.js";
 import { createStatesLayer } from "./states-layer.js";
@@ -68,7 +68,7 @@ async function initMap() {
     
     view
       .when(async function () {
-        await updateCityLayerRendererForCachedCities(citiesLayer);
+        await updateCityListFromCache(citiesLayer);
 
         await createLegend(view);
 

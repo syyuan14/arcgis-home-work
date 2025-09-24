@@ -41,25 +41,44 @@ async function loadCachedCities() {
   }
 }
 
-async function saveCitiesData2IndexedDB(cities) {
+const cityFeatures2Json = (cityFeatures) => {
+  return cityFeatures.map((city) => ({
+    objectid: city.attributes.objectid,
+    name: city.attributes.name,
+    population: city.attributes.pop2000 || 0,
+    distance: city.attributes.distance || 0,
+    geometry: city.geometry.toJSON(),
+    attributes: { ...city.attributes },
+    timestamp: new Date().getTime(),
+  }));
+};
+
+async function saveCitiesData2IndexedDB(
+  cityList,
+  options = {
+    clearHistoryData: true,
+  }
+) {
   try {
+    const { clearHistoryData } = options;
     const db = await initDatabase();
     const transaction = db.transaction(["cities"], "readwrite");
     const store = transaction.objectStore("cities");
 
-    for (const city of cities) {
-      const cityData = {
-        objectid: city.attributes.objectid,
-        name: city.attributes.name,
-        population: city.attributes.pop2000 || 0,
-        distance: city.attributes.distance || 0,
-        geometry: city.geometry.toJSON(),
-        attributes: { ...city.attributes },
-        timestamp: new Date().getTime(),
-      };
-
+    if (clearHistoryData) {
+      await new Promise((resolve,reject)=>{
+        const request = store.clear();
+        request.onsuccess = () => {
+          resolve();
+        };
+        request.onerror = (e) => {
+          reject(e);
+        };
+      })
+    }
+    cityList.forEach(async (city) => {
       await new Promise((resolve, reject) => {
-        const request = store.put(cityData);
+        const request = store.put(city);
         request.onsuccess = () => {
           resolve();
         };
@@ -67,7 +86,7 @@ async function saveCitiesData2IndexedDB(cities) {
           reject(e);
         };
       });
-    }
+    });
   } catch (error) {
     console.error("saveCitiesData2IndexedDB error:", error);
   }
@@ -133,10 +152,14 @@ export async function createCityLayer() {
   return cityLayer;
 }
 
-export async function updateCityLayerRendererForCachedCities(citiesLayer) {
-  try {
-    const cachedCities = await loadCachedCities();
+export const updateCityListFromCache = async (citiesLayer) => {
+  const cachedCities = await loadCachedCities();
+  updateCityLayerRenderer(citiesLayer, cachedCities);
+  updateCityList(cachedCities);
+};
 
+async function updateCityLayerRenderer(citiesLayer, cachedCities) {
+  try {
     if (cachedCities.length === 0) {
       console.log("updateCityLayerRendererForCachedCities no data");
       return;
@@ -255,15 +278,13 @@ export async function showCitiesNearHighway(highwayFeature, citiesLayer, view) {
     }
 
     nearbyCities.sort((a, b) => a.attributes.distance - b.attributes.distance);
+    const cityDataJson = cityFeatures2Json(nearbyCities);
+
+    updateCityLayerRenderer(citiesLayer, cityDataJson);
+    updateCityList(cityDataJson);
 
     // save cities data to indexed db
-    await saveCitiesData2IndexedDB(nearbyCities);
-
-    // update city list ui
-    updateCityList(nearbyCities);
-
-    // update city layer renderer for cached cities
-    await updateCityLayerRendererForCachedCities(citiesLayer);
+    await saveCitiesData2IndexedDB(cityDataJson);
   } catch (error) {
     console.error("showCitiesNearHighway error:", error);
   }
