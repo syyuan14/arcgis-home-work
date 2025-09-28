@@ -44,11 +44,11 @@ async function loadCachedCities() {
 const cityFeatures2Json = (cityFeatures) => {
   return cityFeatures.map((city) => ({
     objectid: city.attributes.objectid,
-    name: city.attributes.name,
+    name: city.attributes.areaname,
     population: city.attributes.pop2000 || 0,
     distance: city.attributes.distance || 0,
     geometry: city.geometry.toJSON(),
-    attributes: { ...city.attributes },
+    attributes: { ...city.attributes,name: city.attributes.areaname },
     timestamp: new Date().getTime(),
   }));
 };
@@ -95,7 +95,7 @@ async function saveCitiesData2IndexedDB(
 export async function createCityLayer() {
   // 城市图层的URL - 根据错误日志调整为MapServer/3
   const cityLayerUrl =
-    "https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer/3";
+    "https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer/0";
   const FeatureLayer = await $arcgis.import(
     "@arcgis/core/layers/FeatureLayer.js"
   );
